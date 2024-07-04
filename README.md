@@ -1,34 +1,66 @@
 # Customer-Purchase-Analysis-Project
-Objective:
-To analyze customer purchase data to uncover insights about purchasing behavior, identify sales trends, and visualize key metrics.
+# Import necessary libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-Dataset:
-Assuming we have a CSV file named customer_purchases.csv with the following columns:
+# Load the dataset
+df = pd.read_csv('customer_purchases.csv')
 
-CustomerID
-PurchaseDate
-ProductID
-ProductCategory
-Quantity
-UnitPrice
-Libraries Import:
+# Display the first few rows of the dataset
+print(df.head())
 
-Import the necessary libraries for data analysis (pandas) and visualization (matplotlib, seaborn).
-Load the Dataset:
+# Data Cleaning
+# Check for missing values
+print(df.isnull().sum())
 
-Load the customer purchase data from a CSV file into a DataFrame.
-Data Cleaning:
+# Drop rows with missing CustomerID or ProductID as they are crucial for analysis
+df = df.dropna(subset=['CustomerID', 'ProductID'])
 
-Check for missing values and drop rows with missing CustomerID or ProductID.
-Convert the PurchaseDate column to a datetime format.
-Add a column for the total purchase amount (TotalAmount).
-Data Analysis:
+# Convert 'PurchaseDate' column to datetime format
+df['PurchaseDate'] = pd.to_datetime(df['PurchaseDate'])
 
-Calculate total sales by product category and sort the results to identify the most popular categories.
-Calculate monthly sales by extracting the month from the PurchaseDate column and grouping by month.
-Identify the top 10 customers by total purchase amount.
-Data Visualization:
+# Add a column for total purchase amount
+df['TotalAmount'] = df['Quantity'] * df['UnitPrice']
 
-Create a bar plot for total sales by product category.
-Create a line plot to visualize the monthly sales trend.
-Create a bar plot for the top 10 customers by total purchase amount.
+# Data Analysis
+# Calculate total sales by product category
+total_sales_by_category = df.groupby('ProductCategory')['TotalAmount'].sum().reset_index().sort_values(by='TotalAmount', ascending=False)
+print(total_sales_by_category)
+
+# Calculate total sales by month
+df['Month'] = df['PurchaseDate'].dt.to_period('M')
+monthly_sales = df.groupby('Month')['TotalAmount'].sum().reset_index()
+print(monthly_sales)
+
+# Identify top customers by total purchase amount
+top_customers = df.groupby('CustomerID')['TotalAmount'].sum().reset_index().sort_values(by='TotalAmount', ascending=False).head(10)
+print(top_customers)
+
+# Data Visualization
+# Total Sales by Product Category
+plt.figure(figsize=(10, 6))
+sns.barplot(x='TotalAmount', y='ProductCategory', data=total_sales_by_category)
+plt.title('Total Sales by Product Category')
+plt.xlabel('Total Sales Amount')
+plt.ylabel('Product Category')
+plt.show()
+
+# Monthly Sales Trend
+plt.figure(figsize=(12, 6))
+sns.lineplot(x='Month', y='TotalAmount', data=monthly_sales)
+plt.title('Monthly Sales Trend')
+plt.xlabel('Month')
+plt.ylabel('Total Sales Amount')
+plt.xticks(rotation=45)
+plt.show()
+
+# Top Customers by Total Purchase Amount
+plt.figure(figsize=(10, 6))
+sns.barplot(x='TotalAmount', y='CustomerID', data=top_customers)
+plt.title('Top 10 Customers by Total Purchase Amount')
+plt.xlabel('Total Purchase Amount')
+plt.ylabel('Customer ID')
+plt.show()
+
+
